@@ -1,0 +1,71 @@
+"""Centralized constants and option lists.
+
+Every option shown to the user (gender, military status, education degree,
+license status, center ownership, file field keys) lives here so the
+`GET /api/v1/form/options` endpoint, validation, Excel export and print view
+always stay consistent.
+"""
+
+# value -> Persian label
+GENDER_OPTIONS: dict[str, str] = {
+    "male": "مرد",
+    "female": "زن",
+}
+
+# Open decision #1: exact military status options need product-owner confirmation
+MILITARY_STATUS_OPTIONS: dict[str, str] = {
+    "served": "پایان خدمت",
+    "permanent_exemption": "معافیت دائم",
+    "medical_exemption": "معافیت پزشکی",
+    "temporary_exemption": "معافیت موقت / کسر خدمت",
+}
+
+# Open decision #2: education degree options need product-owner confirmation
+EDUCATION_DEGREE_OPTIONS: dict[str, str] = {
+    "diploma": "دیپلم",
+    "associate": "کاردانی",
+    "bachelor": "کارشناسی",
+    "master": "کارشناسی ارشد",
+    "phd": "دکتری",
+}
+
+# Open decision #3: nature of "پروانه فعالیت مرکز" needs product-owner confirmation
+LICENSE_STATUS_OPTIONS: dict[str, str] = {
+    "valid": "دارای پروانه معتبر",
+    "in_progress": "در حال دریافت پروانه",
+    "none": "فاقد پروانه",
+}
+
+CENTER_OWNERSHIP_OPTIONS: dict[str, str] = {
+    "owned": "ملکی",
+    "rented": "استیجاری",
+    "other": "سایر",
+}
+
+# File upload field keys (part names in multipart/form-data)
+FILE_FIELD_KEYS: dict[str, str] = {
+    "military_card": "کارت پایان خدمت / معافیت",
+    "national_id_card": "کارت ملی",
+    "degree_document": "مدرک تحصیلی",
+    "professional_license": "پروانه فعالیت / عضویت نظام",
+    "center_activity_license": "مجوز فعالیت مرکز",
+    "center_permit": "پروانه تأسیس مرکز",
+    "property_documents": "اسناد مالکیت / اجاره‌نامه",
+}
+
+ALLOWED_FILE_TYPES: dict[str, str] = {
+    "pdf": "application/pdf",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+}
+
+# Magic-byte signatures used to verify real content type (never trust extension alone)
+MAGIC_BYTES: dict[str, bytes] = {
+    "application/pdf": b"%PDF-",
+    "image/jpeg": b"\xff\xd8\xff",
+    "image/png": b"\x89PNG\r\n\x1a\n",
+}
+
+# Characters that must never start an Excel cell (formula injection protection)
+EXCEL_DANGEROUS_PREFIXES = ("=", "+", "-", "@")
