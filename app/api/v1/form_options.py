@@ -36,5 +36,20 @@ async def get_form_options() -> dict:
             "max_request_size_bytes": settings.MAX_REQUEST_SIZE_BYTES,
             "max_counter_value": settings.MAX_COUNTER_VALUE if settings.MAX_COUNTER_VALUE > 0 else None,
             "required_file_fields": settings.required_file_fields_list,
+            # قانون‌های اعتبارسنجی که مرورگر هم باید همان‌ها را پیش از ارسال چک کند
+            # تا پیام خطا همیشه دقیقاً روی خود فیلد نشان داده شود.
+            "rules": {
+                "require_military_status_for_male": settings.REQUIRE_MILITARY_STATUS_FOR_MALE,
+                "require_license_description": settings.REQUIRE_LICENSE_DESCRIPTION,
+                "min_age_years": settings.MIN_AGE_YEARS if settings.MIN_AGE_YEARS > 0 else None,
+                "max_counter_value": settings.MAX_COUNTER_VALUE if settings.MAX_COUNTER_VALUE > 0 else None,
+                "max_lengths": {
+                    "first_name": 100,
+                    "last_name": 100,
+                    "education_field": 120,
+                    "license_description": 1000,
+                    "address": 500,
+                },
+            },
         },
     }

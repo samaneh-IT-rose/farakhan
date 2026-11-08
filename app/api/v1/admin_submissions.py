@@ -8,7 +8,7 @@ import datetime as dt
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_admin, get_db_session
@@ -21,6 +21,7 @@ from app.repositories.submission_repository import (
 from app.schemas.admin import PaginatedSubmissions, SubmissionDetail, SubmissionListItem
 from app.schemas.submission import SubmissionCreate  # noqa: F401  (re-exported for docs)
 from app.services.excel_service import build_export_workbook
+from app.services.pdf_service import build_submission_pdf
 from app.services.print_service import build_print_data
 from app.utils.jalali_date import parse_jalali_date
 from app.utils.national_code import normalize_national_code
@@ -127,6 +128,24 @@ async def get_submission_detail(
     detail = SubmissionDetail.model_validate(submission)
     return {"success": True, "data": detail.model_dump(mode="json")}
 
+
+@router.get("/submissions/{submission_id}/export.pdf")
+async def export_submission_pdf(
+    submission_id: int, session: AsyncSession = Depends(get_db_session)
+) -> Response:
+    """PDF قابل چاپ برای یک فرم ثبت‌شده."""
+    submission = await get_submission(session, submission_id)
+    if submission is None:
+        raise AppError(status_code=404, message="فرم مورد نظر یافت نشد.")
+    content = build_submission_pdf(submission)
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="submission-{submission.tracking_code}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 @router.get("/submissions/{submission_id}/print")
 async def get_submission_print(

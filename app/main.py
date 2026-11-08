@@ -59,6 +59,15 @@ def create_app() -> FastAPI:
             database_status = "error"
         return {"status": "ok", "database": database_status, "app_env": settings.APP_ENV}
 
+    # --- Farakhan public form (static hosting) ---
+    from pathlib import Path as _StaticPath
+
+    from fastapi.staticfiles import StaticFiles
+
+    _static_dir = _StaticPath(__file__).resolve().parent / "static"
+    if _static_dir.is_dir():
+        app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
+
     return app
 
 

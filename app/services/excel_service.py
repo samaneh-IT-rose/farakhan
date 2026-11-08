@@ -3,16 +3,17 @@
 - Text values are sanitized against formula injection (=, +, -, @ prefixes).
 - File binaries are NOT exported; only attachment names/metadata.
 - Row count is capped by EXPORT_MAX_ROWS.
+- First column is the unique registry ID (شناسه) of each submission.
 """
 from io import BytesIO
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from app.core.constants import (
     CENTER_OWNERSHIP_OPTIONS,
-    EDUCATION_DEGREE_OPTIONS,
+    EDUCATION_DEGREE_LABELS,
     EXCEL_DANGEROUS_PREFIXES,
     FILE_FIELD_KEYS,
     GENDER_OPTIONS,
@@ -23,15 +24,15 @@ from app.db.models.submission import Submission
 from app.utils.jalali_date import format_jalali
 
 HEADER_ROW = [
-    "کد پیگیری", "نام", "نام خانوادگی", "کد ملی", "جنسیت", "تاریخ تولد",
-    "وضعیت سربازی", "مدرک تحصیلی", "رشته تحصیلی", "وضعیت پروانه",
+    "شناسه", "کد پیگیری", "نام", "نام خانوادگی", "کد ملی", "جنسیت", "تاریخ تولد",
+    "وضعیت سربازی", "مدرک تحصیلی", "رشته تحصیلی / توضیحات مدرک", "وضعیت پروانه",
     "توضیحات پروانه", "مالکیت مرکز", "استان", "شهرستان", "تلفن ثابت",
     "کدپستی", "نشانی", "اتاق فردی", "اتاق گروهی", "اتاق کودک",
     "تعداد مشاوران", "فضای انتظار", "پذیرش الگوی شرکت", "سهولت دسترسی",
     "شماره همراه", "پیوست‌ها", "تاریخ ثبت",
 ]
 
-COLUMN_WIDTHS = [16, 14, 16, 14, 8, 12, 16, 12, 14, 16, 24, 12, 12, 14, 14, 12, 30, 9, 9, 9, 12, 10, 14, 11, 14, 34, 12]
+COLUMN_WIDTHS = [8, 16, 14, 16, 14, 8, 12, 16, 14, 20, 16, 24, 12, 12, 14, 14, 12, 30, 9, 9, 9, 12, 10, 14, 11, 14, 34, 12]
 
 
 def sanitize_excel_cell(value) -> object:
@@ -64,10 +65,12 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
     sheet = workbook.active
     sheet.title = "فرم‌های فراخوان"
 
-    bold = Font(bold=True)
+    bold = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="1F7A5C")
     for column, title in enumerate(HEADER_ROW, start=1):
         cell = sheet.cell(row=1, column=column, value=title)
         cell.font = bold
+        cell.fill = header_fill
         cell.alignment = Alignment(horizontal="right")
         sheet.column_dimensions[get_column_letter(column)].width = COLUMN_WIDTHS[column - 1]
     sheet.freeze_panes = "A2"
@@ -76,7 +79,13 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
         created_jalali = (
             format_jalali(submission.created_at.date()) if submission.created_at else ""
         )
+        education_header_value = (
+            submission.education_field
+            if submission.education_degree == "other"
+            else submission.education_field or ""
+        )
         values = [
+            submission.id,
             submission.tracking_code,
             submission.first_name,
             submission.last_name,
@@ -84,8 +93,8 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
             _label(GENDER_OPTIONS, submission.gender),
             submission.birth_date_jalali or "",
             _label(MILITARY_STATUS_OPTIONS, submission.military_status),
-            _label(EDUCATION_DEGREE_OPTIONS, submission.education_degree),
-            submission.education_field or "",
+            _label(EDUCATION_DEGREE_LABELS, submission.education_degree),
+            education_header_value or "",
             _label(LICENSE_STATUS_OPTIONS, submission.license_status),
             submission.license_description or "",
             _label(CENTER_OWNERSHIP_OPTIONS, submission.center_ownership),
@@ -107,7 +116,7 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
         ]
         for column, value in enumerate(values, start=1):
             sheet.cell(row=index, column=column, value=sanitize_excel_cell(value))
-        sheet.cell(row=index, column=1).alignment = Alignment(horizontal="right")
+        sheet.cell(row=index, column=2).alignment = Alignment(horizontal="right")
 
     buffer = BytesIO()
     workbook.save(buffer)

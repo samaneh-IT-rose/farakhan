@@ -22,11 +22,17 @@ MILITARY_STATUS_OPTIONS: dict[str, str] = {
 
 # Open decision #2: education degree options need product-owner confirmation
 EDUCATION_DEGREE_OPTIONS: dict[str, str] = {
-    "diploma": "دیپلم",
-    "associate": "کاردانی",
     "bachelor": "کارشناسی",
     "master": "کارشناسی ارشد",
-    "phd": "دکتری",
+    "phd": "دکترا",
+    "other": "سایر",
+}
+
+# برچسب‌های قدیمی برای ردیف‌هایی که پیش‌تر با گزینه‌های قدیمی ذخیره شده‌اند
+EDUCATION_DEGREE_LABELS: dict[str, str] = {
+    "diploma": "دیپلم",
+    "associate": "کاردانی",
+    **EDUCATION_DEGREE_OPTIONS,
 }
 
 # Open decision #3: nature of "پروانه فعالیت مرکز" needs product-owner confirmation

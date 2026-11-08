@@ -5,7 +5,7 @@ PDF. File binaries are never embedded automatically (per PRD).
 """
 from app.core.constants import (
     CENTER_OWNERSHIP_OPTIONS,
-    EDUCATION_DEGREE_OPTIONS,
+    EDUCATION_DEGREE_LABELS,
     FILE_FIELD_KEYS,
     GENDER_OPTIONS,
     LICENSE_STATUS_OPTIONS,
@@ -27,6 +27,11 @@ def _bool(value: bool) -> str:
 
 def build_print_data(submission: Submission) -> dict:
     created_at = submission.created_at
+    education_label = (
+        "توضیحات مدرک (سایر)"
+        if submission.education_degree == "other"
+        else "رشته تحصیلی"
+    )
     fields = [
         {"label": "کد پیگیری", "value": submission.tracking_code},
         {"label": "نام و نام خانوادگی", "value": f"{submission.first_name} {submission.last_name}"},
@@ -34,8 +39,8 @@ def build_print_data(submission: Submission) -> dict:
         {"label": "جنسیت", "value": _label(GENDER_OPTIONS, submission.gender)},
         {"label": "تاریخ تولد", "value": submission.birth_date_jalali or ""},
         {"label": "وضعیت سربازی", "value": _label(MILITARY_STATUS_OPTIONS, submission.military_status) or "—"},
-        {"label": "مدرک تحصیلی", "value": _label(EDUCATION_DEGREE_OPTIONS, submission.education_degree) or "—"},
-        {"label": "رشته تحصیلی", "value": submission.education_field or "—"},
+        {"label": "مدرک تحصیلی", "value": _label(EDUCATION_DEGREE_LABELS, submission.education_degree) or "—"},
+        {"label": education_label, "value": submission.education_field or "—"},
         {"label": "وضعیت پروانه", "value": _label(LICENSE_STATUS_OPTIONS, submission.license_status)},
         {"label": "توضیحات پروانه", "value": submission.license_description or "—"},
         {"label": "مالکیت مرکز", "value": _label(CENTER_OWNERSHIP_OPTIONS, submission.center_ownership)},

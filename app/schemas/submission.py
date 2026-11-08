@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.core.config import get_settings
 from app.utils.national_code import is_valid_national_code
 from app.utils.phone import is_valid_landline, is_valid_mobile, normalize_phone
+from app.utils.postal_code import is_valid_postal_code_format
 from app.utils.jalali_date import (
     is_future_jalali_date,
     is_plausible_jalali_date,
@@ -21,7 +22,7 @@ from app.utils.text_tools import clean_text
 
 Gender = Literal["male", "female"]
 MilitaryStatus = Literal["served", "permanent_exemption", "medical_exemption", "temporary_exemption"]
-EducationDegree = Literal["diploma", "associate", "bachelor", "master", "phd"]
+EducationDegree = Literal["bachelor", "master", "phd", "other"]
 LicenseStatus = Literal["valid", "in_progress", "none"]
 CenterOwnership = Literal["owned", "rented", "other"]
 
@@ -131,7 +132,7 @@ class SubmissionCreate(BaseModel):
     def _validate_postal_code(cls, value: str | None) -> str | None:
         if value is None:
             return None
-        if len(value) != 10 or not value.isdigit():
+        if not is_valid_postal_code_format(value):
             raise ValueError(POSTAL_CODE_MESSAGE)
         return value
 
@@ -142,6 +143,14 @@ class SubmissionCreate(BaseModel):
         if not normalized or not is_valid_mobile(normalized):
             raise ValueError(MOBILE_MESSAGE)
         return normalized
+
+    @field_validator("education_field")
+    @classmethod
+    def _require_education_description(cls, value: str | None, info) -> str | None:
+        # انتخاب «سایر» در مدرک تحصیلی، توضیح کوتاه مدرک را الزامی می‌کند.
+        if info.data.get("education_degree") == "other" and not (value or "").strip():
+            raise ValueError("توضیحات مدرک برای گزینه «سایر» الزامی است.")
+        return value
 
     @field_validator("phone")
     @classmethod

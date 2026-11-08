@@ -21,6 +21,7 @@ from app.repositories.location_repository import get_county_of_province, get_pro
 from app.schemas.submission import SubmissionCreate
 from app.services.file_service import read_and_validate_upload
 from app.utils.jalali_date import parse_jalali_date, to_gregorian_date
+from app.utils.postal_code import POSTAL_PROVINCE_MESSAGE, postal_code_matches_province
 from app.utils.tracking_code import generate_tracking_code
 
 logger = logging.getLogger("farakhan.submissions")
@@ -68,6 +69,13 @@ async def create_submission(
             location_errors = _location_errors(province, county)
             if location_errors:
                 raise AppValidationError(errors=location_errors)
+
+            # کدپستی باید با استان انتخاب‌شده همخوانی داشته باشد.
+            if (
+                data.postal_code
+                and postal_code_matches_province(data.postal_code, province.name) is False
+            ):
+                raise AppValidationError(errors={"postal_code": POSTAL_PROVINCE_MESSAGE})
 
             # 2) Read + validate every uploaded file (never trust client MIME).
             file_rows: list[SubmissionFile] = []
