@@ -20,18 +20,19 @@ MILITARY_STATUS_OPTIONS: dict[str, str] = {
     "temporary_exemption": "معافیت موقت / کسر خدمت",
 }
 
-# Open decision #2: education degree options need product-owner confirmation
+# Open decision #2 (confirmed by product owner): only university degrees,
+# starting from bachelor — no more «سایر» option.
 EDUCATION_DEGREE_OPTIONS: dict[str, str] = {
     "bachelor": "کارشناسی",
     "master": "کارشناسی ارشد",
     "phd": "دکترا",
-    "other": "سایر",
 }
 
 # برچسب‌های قدیمی برای ردیف‌هایی که پیش‌تر با گزینه‌های قدیمی ذخیره شده‌اند
 EDUCATION_DEGREE_LABELS: dict[str, str] = {
     "diploma": "دیپلم",
     "associate": "کاردانی",
+    "other": "سایر",
     **EDUCATION_DEGREE_OPTIONS,
 }
 
@@ -49,10 +50,12 @@ CENTER_OWNERSHIP_OPTIONS: dict[str, str] = {
 }
 
 # File upload field keys (part names in multipart/form-data)
+# برچسب فایل‌های اجباری با واژهٔ «تصویر» شروع می‌شود تا با فیلد متن «مدرک
+# تحصیلی» اشتباه نشود و پیام خطا دقیقاً نام همان فایل را بگوید.
 FILE_FIELD_KEYS: dict[str, str] = {
     "military_card": "کارت پایان خدمت / معافیت",
-    "national_id_card": "کارت ملی",
-    "degree_document": "مدرک تحصیلی",
+    "national_id_card": "تصویر کارت ملی",
+    "degree_document": "تصویر مدرک تحصیلی",
     "professional_license": "پروانه فعالیت / عضویت نظام",
     "center_activity_license": "مجوز فعالیت مرکز",
     "center_permit": "پروانه تأسیس مرکز",

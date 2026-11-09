@@ -58,7 +58,8 @@ class Settings(BaseSettings):
     REQUIRE_MILITARY_CARD_FOR_MALE: bool = False
     REQUIRE_LICENSE_DESCRIPTION: bool = False
     REQUIRE_PROPERTY_DOCUMENTS: bool = False
-    REQUIRED_FILE_FIELDS: str = ""  # comma separated file field keys, e.g. national_id_card
+    # فیلدهای فایل اجباری (خواستهٔ مدیر سامانه): تصویر کارت ملی و تصویر مدرک تحصیلی
+    REQUIRED_FILE_FIELDS: str = "national_id_card,degree_document"
 
     @property
     def cors_origins_list(self) -> list[str]:

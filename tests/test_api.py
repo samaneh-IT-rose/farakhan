@@ -215,8 +215,9 @@ class TestAdminReports:
 
         workbook = openpyxl.load_workbook(io.BytesIO(response.content))
         sheet = workbook.active
-        assert sheet.cell(row=1, column=1).value == "کد پیگیری"
-        last_name_cell = sheet.cell(row=2, column=3).value
+        assert sheet.cell(row=1, column=1).value == "شناسه"
+        assert sheet.cell(row=1, column=2).value == "کد پیگیری"
+        last_name_cell = sheet.cell(row=2, column=4).value
         assert last_name_cell.startswith("'")  # formula injection neutralized
 
     async def test_file_download(self, client, admin_headers):

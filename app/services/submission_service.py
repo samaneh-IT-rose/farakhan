@@ -111,7 +111,9 @@ async def create_submission(
             if missing:
                 raise AppValidationError(
                     errors={
-                        f"files.{key}": "بارگذاری این فایل الزامی است." for key in missing
+                        # نام دقیق فایل داخل پیام می‌آید تا کاربر بداند کدام مدرک کم است.
+                        f"files.{key}": "بارگذاری «" + FILE_FIELD_KEYS.get(key, key) + "» الزامی است."
+                        for key in missing
                     }
                 )
 

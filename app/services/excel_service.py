@@ -79,11 +79,7 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
         created_jalali = (
             format_jalali(submission.created_at.date()) if submission.created_at else ""
         )
-        education_header_value = (
-            submission.education_field
-            if submission.education_degree == "other"
-            else submission.education_field or ""
-        )
+        education_header_value = submission.education_field or ""
         values = [
             submission.id,
             submission.tracking_code,

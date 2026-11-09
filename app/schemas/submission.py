@@ -22,7 +22,8 @@ from app.utils.text_tools import clean_text
 
 Gender = Literal["male", "female"]
 MilitaryStatus = Literal["served", "permanent_exemption", "medical_exemption", "temporary_exemption"]
-EducationDegree = Literal["bachelor", "master", "phd", "other"]
+# فقط مدارک دانشگاهی از کارشناسی به بالا (خواستهٔ مدیر سامانه)
+EducationDegree = Literal["bachelor", "master", "phd"]
 LicenseStatus = Literal["valid", "in_progress", "none"]
 CenterOwnership = Literal["owned", "rented", "other"]
 
@@ -35,6 +36,8 @@ POSTAL_CODE_MESSAGE = "کدپستی باید ۱۰ رقم باشد."
 NATIONAL_CODE_LENGTH_MESSAGE = "کد ملی باید ۱۰ رقم باشد."
 NATIONAL_CODE_INVALID_MESSAGE = "کد ملی واردشده معتبر نیست."
 TERMS_MESSAGE = "پذیرش قوانین و شرایط برای ثبت نهایی الزامی است."
+EDUCATION_DEGREE_MESSAGE = "مدرک تحصیلی را انتخاب کنید."
+EDUCATION_FIELD_MESSAGE = "رشته تحصیلی را وارد کنید."
 
 
 class SubmissionCreate(BaseModel):
@@ -50,8 +53,8 @@ class SubmissionCreate(BaseModel):
     # Military (conditional)
     military_status: MilitaryStatus | None = None
 
-    # Education
-    education_degree: EducationDegree | None = None
+    # Education (هر دو فیلد الزامی‌اند)
+    education_degree: EducationDegree
     education_field: str | None = Field(default=None, max_length=120)
 
     # License
@@ -86,6 +89,14 @@ class SubmissionCreate(BaseModel):
     terms_accepted: bool
 
     # ---------- normalizers ----------
+    @field_validator("education_degree", mode="before")
+    @classmethod
+    def _require_education_degree(cls, value):
+        # حتی اگر فرم قدیمی مقدار null بفرستد، پیام دقیق همان فیلد نمایش داده می‌شود.
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValueError(EDUCATION_DEGREE_MESSAGE)
+        return value
+
     @field_validator("national_code", "birth_date", "postal_code", mode="before")
     @classmethod
     def _normalize_digits(cls, value):
@@ -146,10 +157,10 @@ class SubmissionCreate(BaseModel):
 
     @field_validator("education_field")
     @classmethod
-    def _require_education_description(cls, value: str | None, info) -> str | None:
-        # انتخاب «سایر» در مدرک تحصیلی، توضیح کوتاه مدرک را الزامی می‌کند.
-        if info.data.get("education_degree") == "other" and not (value or "").strip():
-            raise ValueError("توضیحات مدرک برای گزینه «سایر» الزامی است.")
+    def _require_education_field(cls, value: str | None) -> str:
+        # رشته تحصیلی برای همهٔ متقاضیان الزامی است.
+        if not (value or "").strip():
+            raise ValueError(EDUCATION_FIELD_MESSAGE)
         return value
 
     @field_validator("phone")
