@@ -64,9 +64,19 @@ def create_app() -> FastAPI:
 
     from fastapi.staticfiles import StaticFiles
 
+    class _SPAStaticFiles(StaticFiles):
+        """index.html must always be revalidated so browsers pick up a new
+        build immediately; content-hashed assets stay safely cacheable."""
+
+        def file_response(self, *args, **kwargs):  # type: ignore[override]
+            response = super().file_response(*args, **kwargs)
+            if response.headers.get("content-type", "").startswith("text/html"):
+                response.headers["Cache-Control"] = "no-cache"
+            return response
+
     _static_dir = _StaticPath(__file__).resolve().parent / "static"
     if _static_dir.is_dir():
-        app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
+        app.mount("/", _SPAStaticFiles(directory=str(_static_dir), html=True), name="static")
 
     return app
 
