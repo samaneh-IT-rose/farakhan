@@ -24,7 +24,7 @@ class SubmissionListItem(BaseModel):
     last_name: str
     national_code: str
     gender: str
-    mobile_number: str
+    mobile_number: str | None
     province_name: str
     county_name: str
     created_at: datetime
@@ -46,6 +46,7 @@ class SubmissionDetail(BaseModel):
     education_degree: str | None
     education_field: str | None
     license_status: str
+    license_number: str | None
     license_description: str | None
     center_ownership: str
     province_id: int
@@ -55,7 +56,7 @@ class SubmissionDetail(BaseModel):
     phone: str | None
     postal_code: str | None
     address: str | None
-    mobile_number: str
+    mobile_number: str | None
     individual_rooms: int
     group_rooms: int
     child_rooms: int

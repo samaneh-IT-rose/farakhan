@@ -1,7 +1,7 @@
 """File upload handling: allowed types, size limits, magic bytes, duplicates, transactionality."""
 import pytest
 
-from tests.conftest import MINIMAL_JPEG, MINIMAL_PDF, MINIMAL_PNG, submit_form, valid_payload
+from tests.conftest import MINIMAL_JPEG, MINIMAL_PDF, MINIMAL_PNG, all_required_files, submit_form, valid_payload
 from tests.test_api import get_admin_json
 
 
@@ -14,17 +14,16 @@ class TestAcceptedFiles:
         ]
     )
     async def test_valid_files_accepted(self, client, part):
-        response = await submit_form(client, files={part[0]: part[1]})
+        response = await submit_form(client, files=all_required_files(**{part[0]: part[1]}))
         assert response.status_code == 201, response.text
 
     async def test_metadata_stored(self, client, admin_headers):
-        response = await submit_form(client, files={
-            "national_id_card": ("کارت ملی.pdf", MINIMAL_PDF, "application/pdf"),
-        })
+        response = await submit_form(client, files=all_required_files(
+            national_id_card=("کارت ملی.pdf", MINIMAL_PDF, "application/pdf")))
         assert response.status_code == 201
         data = await get_admin_json(client, admin_headers, "/api/v1/admin/submissions/1")
         files = data["files"]
-        assert len(files) == 1
+        assert len(files) == 3  # v10: all three required files present
         assert files[0]["original_name"] == "کارت ملی.pdf"
         assert files[0]["mime_type"] == "application/pdf"
         assert files[0]["size_bytes"] == len(MINIMAL_PDF)

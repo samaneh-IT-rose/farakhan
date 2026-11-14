@@ -132,6 +132,7 @@ async def create_submission(
                 education_degree=data.education_degree,
                 education_field=data.education_field,
                 license_status=data.license_status,
+                license_number=data.license_number,
                 license_description=data.license_description,
                 center_ownership=data.center_ownership,
                 province_id=province.id,

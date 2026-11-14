@@ -12,7 +12,7 @@ os.environ["ADMIN_USERNAME"] = "admin"
 os.environ["ADMIN_PASSWORD"] = "admin-pass-123"
 os.environ["RATE_LIMIT_SUBMIT_PER_MINUTE"] = "1000"
 os.environ["RATE_LIMIT_LOGIN_PER_MINUTE"] = "1000"
-os.environ["REQUIRED_FILE_FIELDS"] = ""
+os.environ["REQUIRED_FILE_FIELDS"] = "national_id_card,degree_document,center_activity_license"
 os.environ["MIN_AGE_YEARS"] = "0"
 os.environ["MAX_COUNTER_VALUE"] = "0"
 os.environ["APP_ENV"] = "test"
@@ -61,6 +61,7 @@ def valid_payload(**overrides) -> dict:
         "education_degree": "bachelor",
         "education_field": "روانشناسی",
         "license_status": "valid",
+        "license_number": "12345",
         "license_description": "پروانه معتبر نظام مشاوره",
         "center_ownership": "rented",
         "province_id": PROVINCE_A_ID,
@@ -119,6 +120,17 @@ async def admin_headers(client):
     return {"Authorization": f"Bearer {token}"}
 
 
+def all_required_files(**extra_files):
+    """The three required files (v10) with optional per-key overrides."""
+    parts = {
+        "national_id_card": ("card.pdf", MINIMAL_PDF, "application/pdf"),
+        "degree_document": ("degree.pdf", MINIMAL_PDF, "application/pdf"),
+        "center_activity_license": ("center.pdf", MINIMAL_PDF, "application/pdf"),
+    }
+    parts.update(extra_files)
+    return parts
+
+
 async def submit_form(
     client,
     payload: dict | None = None,
@@ -129,5 +141,7 @@ async def submit_form(
     body = {"payload": json.dumps(payload if payload is not None else valid_payload(), ensure_ascii=False)}
     file_parts = files if files is not None else {
         "national_id_card": ("card.pdf", MINIMAL_PDF, "application/pdf"),
+        "degree_document": ("degree.pdf", MINIMAL_PDF, "application/pdf"),
+        "center_activity_license": ("center.pdf", MINIMAL_PDF, "application/pdf"),
     }
     return await client.post("/api/v1/submissions", data=body, files=file_parts, headers=headers or {})

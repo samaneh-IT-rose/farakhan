@@ -272,6 +272,7 @@ def build_submission_pdf(submission) -> bytes:
     section("۲", "تحصیلات و پروانه فعالیت", [
         ("مدرک تحصیلی", val("مدرک تحصیلی"), False),
         ("وضعیت پروانه", val("وضعیت پروانه"), False),
+        ("شماره پروانه", val("شماره پروانه"), False),
         (edu_desc_label, val(edu_desc_label), True),
         ("توضیحات پروانه", val("توضیحات پروانه"), True),
     ])

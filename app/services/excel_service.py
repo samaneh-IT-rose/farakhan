@@ -26,13 +26,13 @@ from app.utils.jalali_date import format_jalali
 HEADER_ROW = [
     "شناسه", "کد پیگیری", "نام", "نام خانوادگی", "کد ملی", "جنسیت", "تاریخ تولد",
     "وضعیت سربازی", "مدرک تحصیلی", "رشته تحصیلی / توضیحات مدرک", "وضعیت پروانه",
-    "توضیحات پروانه", "مالکیت مرکز", "استان", "شهرستان", "تلفن ثابت",
+    "شماره پروانه", "توضیحات پروانه", "مالکیت مرکز", "استان", "شهرستان", "تلفن ثابت",
     "کدپستی", "نشانی", "اتاق فردی", "اتاق گروهی", "اتاق کودک",
     "تعداد مشاوران", "فضای انتظار", "پذیرش الگوی شرکت", "سهولت دسترسی",
     "شماره همراه", "پیوست‌ها", "تاریخ ثبت",
 ]
 
-COLUMN_WIDTHS = [8, 16, 14, 16, 14, 8, 12, 16, 14, 20, 16, 24, 12, 12, 14, 14, 12, 30, 9, 9, 9, 12, 10, 14, 11, 14, 34, 12]
+COLUMN_WIDTHS = [8, 16, 14, 16, 14, 8, 12, 16, 14, 20, 16, 14, 24, 12, 12, 14, 14, 12, 30, 9, 9, 9, 12, 10, 14, 11, 14, 34, 12]
 
 
 def sanitize_excel_cell(value) -> object:
@@ -92,6 +92,7 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
             _label(EDUCATION_DEGREE_LABELS, submission.education_degree),
             education_header_value or "",
             _label(LICENSE_STATUS_OPTIONS, submission.license_status),
+            submission.license_number or "",
             submission.license_description or "",
             _label(CENTER_OWNERSHIP_OPTIONS, submission.center_ownership),
             submission.province_name,
@@ -106,7 +107,7 @@ def build_export_workbook(submissions: list[Submission]) -> bytes:
             _bool_label(submission.has_waiting_space),
             "می‌پذیرد" if submission.accepts_company_pattern else "نمی‌پذیرد",
             _bool_label(submission.has_accessibility),
-            submission.mobile_number,
+            submission.mobile_number or "",
             _attachments_label(submission),
             created_jalali,
         ]

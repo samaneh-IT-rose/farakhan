@@ -17,6 +17,7 @@ from tests.conftest import (
     submit_form,
     valid_national_code,
     valid_payload,
+    all_required_files,
 )
 
 
@@ -110,6 +111,40 @@ class TestPublicSubmission:
         assert first.status_code == 201 and second.status_code == 201
         assert first.json()["tracking_code"] == second.json()["tracking_code"]
         assert not idempotency_store.get("other-key")
+
+
+class TestV10Rules:
+    """قوانین نسخهٔ ۱۰: شماره پروانه، تلفن ثابت اجباری، همراه اختیاری، پروانه مرکز."""
+
+    async def test_valid_license_requires_number(self, client):
+        response = await submit_form(client, payload=valid_payload(license_number=None))
+        assert response.status_code == 422, response.text
+        errors = response.json()["errors"]
+        assert "شماره پروانه" in errors.get("license_number", "")
+
+    async def test_in_progress_license_without_number_ok(self, client):
+        response = await submit_form(client, payload=valid_payload(
+            license_status="in_progress", license_number=None))
+        assert response.status_code == 201, response.text
+
+    async def test_landline_required(self, client):
+        response = await submit_form(client, payload=valid_payload(phone=None))
+        assert response.status_code == 422, response.text
+        errors = response.json()["errors"]
+        assert "ثابت" in errors.get("phone", "")
+
+    async def test_mobile_optional(self, client):
+        response = await submit_form(client, payload=valid_payload(mobile_number=None))
+        assert response.status_code == 201, response.text
+
+    async def test_center_license_file_required(self, client):
+        response = await submit_form(client, files={
+            "national_id_card": ("card.pdf", MINIMAL_PDF, "application/pdf"),
+            "degree_document": ("degree.pdf", MINIMAL_PDF, "application/pdf"),
+        })
+        assert response.status_code == 422, response.text
+        errors = response.json()["errors"]
+        assert "پروانه مرکز فعالیت" in errors.get("files.center_activity_license", "")
 
 
 class TestCounterLimit:
@@ -222,7 +257,7 @@ class TestAdminReports:
 
     async def test_file_download(self, client, admin_headers):
         content = b"%PDF-1.4 test-bytes"
-        await submit_form(client, files={"national_id_card": ("doc.pdf", content, "application/pdf")})
+        await submit_form(client, files=all_required_files(national_id_card=("doc.pdf", content, "application/pdf")))
         response = await client.get(
             "/api/v1/admin/submissions/1/files/1", headers=admin_headers
         )

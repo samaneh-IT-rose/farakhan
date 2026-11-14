@@ -57,7 +57,7 @@ FILE_FIELD_KEYS: dict[str, str] = {
     "national_id_card": "تصویر کارت ملی",
     "degree_document": "تصویر مدرک تحصیلی",
     "professional_license": "پروانه فعالیت / عضویت نظام",
-    "center_activity_license": "مجوز فعالیت مرکز",
+    "center_activity_license": "پروانه مرکز فعالیت",
     "center_permit": "پروانه تأسیس مرکز",
     "property_documents": "اسناد مالکیت / اجاره‌نامه",
 }

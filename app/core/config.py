@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     REQUIRE_LICENSE_DESCRIPTION: bool = False
     REQUIRE_PROPERTY_DOCUMENTS: bool = False
     # فیلدهای فایل اجباری (خواستهٔ مدیر سامانه): تصویر کارت ملی و تصویر مدرک تحصیلی
-    REQUIRED_FILE_FIELDS: str = "national_id_card,degree_document"
+    REQUIRED_FILE_FIELDS: str = "national_id_card,degree_document,center_activity_license"
 
     @property
     def cors_origins_list(self) -> list[str]:

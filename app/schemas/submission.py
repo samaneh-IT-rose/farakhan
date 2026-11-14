@@ -38,6 +38,8 @@ NATIONAL_CODE_INVALID_MESSAGE = "کد ملی واردشده معتبر نیست.
 TERMS_MESSAGE = "پذیرش قوانین و شرایط برای ثبت نهایی الزامی است."
 EDUCATION_DEGREE_MESSAGE = "مدرک تحصیلی را انتخاب کنید."
 EDUCATION_FIELD_MESSAGE = "رشته تحصیلی را وارد کنید."
+LICENSE_NUMBER_MESSAGE = "شماره پروانه الزامی است."
+PHONE_REQUIRED_MESSAGE = "شماره تلفن ثابت الزامی است."
 
 
 class SubmissionCreate(BaseModel):
@@ -57,8 +59,9 @@ class SubmissionCreate(BaseModel):
     education_degree: EducationDegree
     education_field: str | None = Field(default=None, max_length=120)
 
-    # License
+    # License (شماره پروانه فقط وقتی وضعیت پروانه «معتبر» باشد الزامی است)
     license_status: LicenseStatus
+    license_number: str | None = Field(default=None, max_length=50, validate_default=True)
     license_description: str | None = Field(default=None, max_length=1000)
 
     # Center
@@ -67,12 +70,12 @@ class SubmissionCreate(BaseModel):
     county_id: int = Field(gt=0)
 
     # Contact / address
-    phone: str | None = Field(default=None, max_length=20)
+    phone: str = Field(max_length=20)
     postal_code: str | None = Field(default=None, max_length=15)
     address: str | None = Field(default=None, max_length=500)
     # Length/format is fully validated by the custom validator so the error
     # message is always the Persian one.
-    mobile_number: str = Field(max_length=20)
+    mobile_number: str | None = Field(default=None, max_length=20)
 
     # Capacity counters
     individual_rooms: int = Field(ge=0)
@@ -104,7 +107,7 @@ class SubmissionCreate(BaseModel):
             return None
         return to_english_digits(str(value)).strip()
 
-    @field_validator("first_name", "last_name", "education_field", "license_description", "address", mode="before")
+    @field_validator("first_name", "last_name", "education_field", "license_number", "license_description", "address", mode="before")
     @classmethod
     def _clean_text(cls, value):
         return clean_text(value) if value is not None else None
@@ -149,7 +152,10 @@ class SubmissionCreate(BaseModel):
 
     @field_validator("mobile_number")
     @classmethod
-    def _validate_mobile(cls, value: str) -> str:
+    def _validate_mobile(cls, value: str | None) -> str | None:
+        # شماره همراه اختیاری است؛ فقط در صورت پرکردن باید معتبر باشد.
+        if value is None or not str(value).strip():
+            return None
         normalized = normalize_phone(value)
         if not normalized or not is_valid_mobile(normalized):
             raise ValueError(MOBILE_MESSAGE)
@@ -163,15 +169,30 @@ class SubmissionCreate(BaseModel):
             raise ValueError(EDUCATION_FIELD_MESSAGE)
         return value
 
+    @field_validator("phone", mode="before")
+    @classmethod
+    def _require_phone(cls, value):
+        # تلفن ثابت اجباری است (خواستهٔ مدیر سامانه).
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValueError(PHONE_REQUIRED_MESSAGE)
+        return value
+
     @field_validator("phone")
     @classmethod
-    def _validate_phone(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
+    def _validate_phone(cls, value: str) -> str:
         normalized = normalize_phone(value)
         if not normalized or not is_valid_landline(normalized):
             raise ValueError(PHONE_MESSAGE)
         return normalized
+
+    @field_validator("license_number", mode="after")
+    @classmethod
+    def _require_license_number(cls, value: str | None, info) -> str | None:
+        # وقتی کاربر «دارای پروانه معتبر» را انتخاب کرده، شماره پروانه اجباری است.
+        status = info.data.get("license_status")
+        if status == "valid" and not (value or "").strip():
+            raise ValueError(LICENSE_NUMBER_MESSAGE)
+        return value
 
     @field_validator("individual_rooms", "group_rooms", "child_rooms", "counselors_count")
     @classmethod
@@ -204,7 +225,6 @@ class SubmissionCreate(BaseModel):
         # License consistency
         if self.license_status == "none":
             self.license_description = None
-        elif settings.REQUIRE_LICENSE_DESCRIPTION and not self.license_description:
-            raise ValueError("توضیحات مربوط به پروانه الزامی است.")
+            self.license_number = None
 
         return self

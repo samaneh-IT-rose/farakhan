@@ -53,6 +53,7 @@ class Submission(Base):
 
     # Professional license
     license_status: Mapped[str] = mapped_column(String(20), nullable=False)
+    license_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     license_description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Center
@@ -70,7 +71,7 @@ class Submission(Base):
     phone: Mapped[str | None] = mapped_column(String(15), nullable=True)
     postal_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
     address: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    mobile_number: Mapped[str] = mapped_column(String(15), nullable=False)
+    mobile_number: Mapped[str | None] = mapped_column(String(15), nullable=True)
 
     # Center capacity counters (>= 0)
     individual_rooms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

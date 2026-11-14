@@ -47,6 +47,28 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(api_router, prefix="/api/v1")
 
+    @app.on_event("startup")
+    async def _ensure_new_columns() -> None:
+        """Idempotent single-column migration for columns added after v7.
+
+        Alembic stays the canonical schema manager (see alembic/versions);
+        this hook only guarantees that Docker deployments rebuilt from a new
+        image also get the new columns without a manual `alembic upgrade head`.
+        """
+        from app.db.session import engine
+
+        statements = [
+            "ALTER TABLE submissions ADD COLUMN IF NOT EXISTS license_number VARCHAR(50)",
+            "ALTER TABLE submissions ALTER COLUMN mobile_number DROP NOT NULL",
+        ]
+        for statement in statements:
+            try:
+                async with engine.begin() as connection:
+                    await connection.execute(text(statement))
+            except Exception:  # noqa: BLE001 - startup must never fail on this
+                # SQLite (tests/e2e) builds the full schema from the models.
+                break
+
     @app.get("/health", tags=["system"], summary="Health check")
     async def health() -> dict:
         database_status = "ok"
